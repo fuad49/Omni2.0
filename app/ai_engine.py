@@ -24,7 +24,13 @@ def process_image(image_bytes: bytes):
         # We ask Gemini to describe the main product in detail, focusing on visual features.
         # Using gemini-2.0-flash as it is available in user's account
         model = genai.GenerativeModel('gemini-2.0-flash')
-        prompt = "Describe the main product in this image in detail. Focus on category, color, material, pattern, and style. Be concise but specific."
+        prompt = """
+        Describe the MAIN PRODUCT in this image.
+        If there is a person/model, IGNORE the person and focus ONLY on the item they are wearing or holding (e.g., Watch, Shirt, Bag, Shoes).
+        If there are multiple items, describe the most prominent fashion accessory or clothing item.
+        Focus on: Category, Color, Material, Pattern, and Style.
+        Be concise but specific.
+        """
         
         response = model.generate_content([prompt, image])
         description = response.text
@@ -72,6 +78,7 @@ def verify_visual_match(image1_bytes: bytes, image2_bytes: bytes) -> int:
         model = genai.GenerativeModel('gemini-2.0-flash')
         prompt = """
         Compare these two images. Are they the EXACT same product model?
+        IGNORE any people, models, or body parts (wrists, hands).
         Ignore lighting, angle, or minor wear.
         Focus on:
         1. Shape (Round vs Square)
