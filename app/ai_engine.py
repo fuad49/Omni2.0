@@ -97,3 +97,28 @@ def verify_visual_match(image1_bytes: bytes, image2_bytes: bytes) -> int:
     except Exception as e:
         logger.error(f"Visual Verification Error: {e}")
         return 0
+
+def generate_chat_response(message: str, context: str = "") -> str:
+    """
+    Generates a chat response using Gemini.
+    """
+    try:
+        model = genai.GenerativeModel('gemini-2.0-flash')
+        
+        system_instruction = """
+        You are a helpful AI shopping assistant for a shop.
+        Your goal is to help customers find products and answer questions about the shop.
+        Be polite, concise, and helpful.
+        If the user asks about products, encourage them to send an image.
+        """
+        
+        if context:
+            system_instruction += f"\n\nShop Context/Rules:\n{context}"
+            
+        prompt = f"{system_instruction}\n\nUser: {message}\nAssistant:"
+        
+        response = model.generate_content(prompt)
+        return response.text.strip()
+    except Exception as e:
+        logger.error(f"Gemini Chat Error: {e}")
+        return "I'm sorry, I'm having trouble understanding right now. Please try again later."

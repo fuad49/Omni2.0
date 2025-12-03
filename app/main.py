@@ -141,8 +141,28 @@ async def process_incoming_message(event: dict):
                 await handle_image_search(sender_id, image_url, recipient_id, shop_config, page_access_token)
                 return # Only process first image for now
 
-    # If text message, maybe send a greeting or help text
-    # await send_facebook_message(sender_id, "Send me an image to find products!", page_access_token)
+    elif "text" in message:
+        if shop_config.get("service_chat", False):
+            await handle_text_chat(sender_id, message["text"], recipient_id, shop_config, page_access_token)
+        else:
+            # Default fallback if chat is disabled
+            await send_facebook_message(sender_id, "I can help with product searches. Send me an image!", page_access_token)
+
+async def handle_text_chat(user_id: str, message_text: str, page_id: str, shop_config: dict, token: str):
+    """Handles text chat using Gemini."""
+    try:
+        # Run AI Chat
+        import asyncio
+        from app.ai_engine import generate_chat_response
+        
+        context = shop_config.get("chat_context", "")
+        loop = asyncio.get_running_loop()
+        reply_text = await loop.run_in_executor(None, generate_chat_response, message_text, context)
+        
+        await send_facebook_message(user_id, reply_text, token)
+    except Exception as e:
+        logger.error(f"Error in text chat: {e}")
+        await send_facebook_message(user_id, "I'm having trouble connecting to my brain right now.", token)
 
 async def handle_image_search(user_id: str, image_url: str, page_id: str, shop_config: dict, token: str):
     """Downloads image, runs AI, finds matches, and replies."""
